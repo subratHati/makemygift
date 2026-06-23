@@ -88,3 +88,31 @@ export async function shareInvite({ blob, link, firstName, secondName }) {
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   return 'fallback';
 }
+
+// Upload the card blob to Cloudinary (unsigned). Returns the secure_url.
+const CLOUD_NAME = 'dc7zdk6is';
+const UPLOAD_PRESET = 'makemygift_unsigned';
+export async function uploadCardToCloudinary(blob) {
+  const form = new FormData();
+  form.append('file', blob);
+  form.append('upload_preset', UPLOAD_PRESET);
+  form.append('folder', 'makemygift/invitations');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: form });
+  if (!res.ok) throw new Error('Card upload failed');
+  const json = await res.json();
+  return json.secure_url;
+}
+
+// Share just the LINK on WhatsApp — WhatsApp fetches it and shows the card as a rich preview
+// (image + clickable link) thanks to the OG tags on the backend /i/:id page.
+export function shareLinkOnWhatsApp(shareLink, { firstName, secondName } = {}) {
+  const msg = `You're invited to ${firstName || ''} & ${secondName || ''}'s wedding 💛\n${shareLink}`;
+  // native share (text) on mobile if available, else wa.me
+  if (navigator.share) {
+    navigator.share({ text: msg }).catch(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    });
+    return;
+  }
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}

@@ -43,6 +43,7 @@ const InvitationSchema = new mongoose.Schema(
     status: { type: String, enum: ['draft', 'paid'], default: 'draft', index: true },
     razorpayOrderId: { type: String, default: '' },
     razorpayPaymentId: { type: String, default: '' },
+    cardImageUrl: { type: String, default: '' }, // Cloudinary URL for WhatsApp OG preview
     openCount: { type: Number, default: 0 },
     lastOpenedAt: { type: Date, default: null },
   },

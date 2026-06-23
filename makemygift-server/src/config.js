@@ -12,4 +12,5 @@ export const config = {
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || '',
   pricePaise: parseInt(process.env.PRICE_PAISE, 10) || 15900, // ₹159.00 (in paise)
   invitationPricePaise: parseInt(process.env.INVITATION_PRICE_PAISE, 10) || 59900, // ₹599.00 (invitations)
+  frontendUrl: process.env.FRONTEND_URL || 'https://makemygift.vercel.app', // where human visitors are sent
 };

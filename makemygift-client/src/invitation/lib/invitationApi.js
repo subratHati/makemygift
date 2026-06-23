@@ -80,3 +80,17 @@ export async function payForInvitation(publicId, { name } = {}) {
 }
 
 export { API_BASE };
+
+export async function saveCardImage(publicId, imageUrl) {
+  const res = await fetch(`${API_BASE}/api/invitations/${publicId}/card`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ imageUrl }),
+  });
+  return res.ok;
+}
+
+// The shareable link goes through the backend /i/:id so WhatsApp gets the OG preview.
+export function shareLinkFor(publicId) {
+  return `${API_BASE}/i/${publicId}`;
+}

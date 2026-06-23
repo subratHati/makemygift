@@ -99,4 +99,13 @@ router.post('/:publicId/verify', async (req, res) => {
   res.json({ invitation });
 });
 
+// POST /api/invitations/:publicId/card — save the Cloudinary card image URL (for WhatsApp preview)
+router.post('/:publicId/card', async (req, res) => {
+  const imageUrl = cleanString(req.body.imageUrl, 400);
+  if (!/^https:\/\/.+/i.test(imageUrl)) return res.status(400).json({ error: 'Invalid image URL' });
+  const invitation = await invitationStore.setCard(req.params.publicId, imageUrl);
+  if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
+  res.json({ ok: true });
+});
+
 export default router;

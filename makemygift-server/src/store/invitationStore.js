@@ -77,6 +77,20 @@ export const invitationStore = {
     return { ...rec };
   },
 
+  async setCard(publicId, imageUrl) {
+    if (isConnected()) {
+      const doc = await Invitation.findOneAndUpdate(
+        { publicId }, { $set: { cardImageUrl: imageUrl } }, { new: true }
+      );
+      return sanitize(doc);
+    }
+    const rec = memory.get(publicId);
+    if (!rec) return null;
+    rec.cardImageUrl = imageUrl; rec.updatedAt = new Date();
+    memory.set(publicId, rec);
+    return { ...rec };
+  },
+
   async markPaid(publicId, paymentId) {
     if (isConnected()) {
       const doc = await Invitation.findOneAndUpdate(

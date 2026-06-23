@@ -3,8 +3,8 @@ import InvitationHero from '../components/InvitationHero.jsx';
 import InvitationPreview from '../components/InvitationPreview.jsx';
 import DateField from '../components/DateField.jsx';
 import { getTemplate } from '../data/invitationTemplates.js';
-import { createInvitation, payForInvitation } from '../lib/invitationApi.js';
-import { makeInviteCard, shareInvite } from '../lib/inviteCard.js';
+import { createInvitation, payForInvitation, saveCardImage, shareLinkFor } from '../lib/invitationApi.js';
+import { makeInviteCard, uploadCardToCloudinary, shareLinkOnWhatsApp } from '../lib/inviteCard.js';
 
 const EVENT_OPTIONS = ['Haldi', 'Mehendi', 'Sangeet', 'Engagement', 'Reception'];
 
@@ -46,28 +46,34 @@ export default function InvitationBuilder({ templateId }) {
   };
 
   const [cardUrl, setCardUrl] = useState('');
-  const cardBlobRef = useRef(null);
-  const [shareMsg, setShareMsg] = useState('');
+  const [cardReady, setCardReady] = useState(false);
+  const [shareMsg, setShareMsg] = useState('Preparing your card…');
 
-  // build the shareable card image once payment is done
+  // after payment: draw the card -> upload to Cloudinary -> save URL (for WhatsApp preview)
   useEffect(() => {
     if (!done) return;
     let alive = true;
     (async () => {
-      const blob = await makeInviteCard(cardNames);
-      if (!alive || !blob) return;
-      cardBlobRef.current = blob;
-      setCardUrl(URL.createObjectURL(blob));
+      try {
+        const blob = await makeInviteCard(cardNames);
+        if (!alive || !blob) return;
+        setCardUrl(URL.createObjectURL(blob));
+        const imageUrl = await uploadCardToCloudinary(blob);
+        if (!alive) return;
+        await saveCardImage(done.publicId, imageUrl);
+        if (!alive) return;
+        setCardReady(true);
+        setShareMsg('');
+      } catch {
+        if (alive) { setCardReady(true); setShareMsg('Card preview may be limited, but your link works.'); }
+      }
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [done]);
 
-  const onShare = async () => {
-    const link = `${window.location.origin}/invitation/${done.publicId}`;
-    const res = await shareInvite({ blob: cardBlobRef.current, link, ...cardNames });
-    if (res === 'fallback') setShareMsg('Card image downloaded — attach it in WhatsApp along with the link.');
-    else setShareMsg('');
+  const onShare = () => {
+    shareLinkOnWhatsApp(shareLinkFor(done.publicId), cardNames);
   };
   const set = (k) => (e) => setData((d) => ({ ...d, [k]: e.target.value }));
 
@@ -89,7 +95,8 @@ export default function InvitationBuilder({ templateId }) {
   }
 
   if (done) {
-    const link = `${window.location.origin}/invitation/${done.publicId}`;
+    const shareLink = shareLinkFor(done.publicId);
+    const appLink = `${window.location.origin}/invitation/${done.publicId}`;
     return (
       <div className="min-h-screen w-full bg-gradient-to-b from-stone-50 to-rose-50/40 text-stone-800 flex items-center justify-center px-5 py-12">
         <div className="w-full max-w-md rounded-2xl bg-white border border-stone-200 shadow-sm p-7 text-center">
@@ -102,19 +109,19 @@ export default function InvitationBuilder({ templateId }) {
               className="mt-5 mx-auto w-44 rounded-xl shadow-md border border-stone-200" />
           )}
 
-          <button onClick={onShare}
-            className="mt-5 w-full rounded-full bg-[#25D366] px-6 py-3 text-white font-semibold shadow-lg shadow-green-300/40 flex items-center justify-center gap-2">
-            <span aria-hidden>🟢</span> Share on WhatsApp
+          <button onClick={onShare} disabled={!cardReady}
+            className="mt-5 w-full rounded-full bg-[#25D366] px-6 py-3 text-white font-semibold shadow-lg shadow-green-300/40 flex items-center justify-center gap-2 disabled:opacity-60">
+            <span aria-hidden>🟢</span> {cardReady ? 'Share on WhatsApp' : 'Preparing…'}
           </button>
           {shareMsg && <p className="mt-2 text-xs text-stone-500">{shareMsg}</p>}
 
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-stone-300 bg-stone-50 p-2">
-            <input readOnly value={link} className="flex-1 bg-transparent px-2 text-sm text-stone-700 outline-none min-w-0" />
-            <button onClick={() => navigator.clipboard?.writeText(link)}
+            <input readOnly value={shareLink} className="flex-1 bg-transparent px-2 text-sm text-stone-700 outline-none min-w-0" />
+            <button onClick={() => navigator.clipboard?.writeText(shareLink)}
               className="rounded-lg bg-rose-500 text-white text-sm px-3 py-2 whitespace-nowrap">Copy</button>
           </div>
 
-          <a href={link} target="_blank" rel="noreferrer"
+          <a href={appLink} target="_blank" rel="noreferrer"
             className="mt-3 inline-block text-rose-600 underline text-sm">
             Open invitation
           </a>
