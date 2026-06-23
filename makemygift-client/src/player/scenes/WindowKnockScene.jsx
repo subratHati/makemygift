@@ -20,8 +20,8 @@ export default function WindowKnockScene({ onNext, gift }) {
   const knockTimer = useRef(null);
   const audio = useRef({ ctx: null });
 
-  const ensureAudio = () => { if (audio.current.ctx) { if (audio.current.ctx.state === 'suspended') audio.current.ctx.resume(); return; } try { audio.current.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} };
-  const knockSound = () => { const ctx = audio.current.ctx; if (!ctx) return; [0, 0.14].forEach((t) => { const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 96; const g = ctx.createGain(); g.gain.value = 0; o.connect(g); g.connect(ctx.destination); const s = ctx.currentTime + t; g.gain.linearRampToValueAtTime(0.45, s + 0.005); g.gain.exponentialRampToValueAtTime(0.001, s + 0.13); o.start(s); o.stop(s + 0.15); }); };
+  const ensureAudio = () => { if (audio.current.ctx) { if (audio.current.ctx.state === 'suspended') audio.current.ctx.resume(); return; } try { audio.current.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { } };
+  const knockSound = () => { const ctx = audio.current.ctx; if (!ctx) return;[0, 0.14].forEach((t) => { const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = 96; const g = ctx.createGain(); g.gain.value = 0; o.connect(g); g.connect(ctx.destination); const s = ctx.currentTime + t; g.gain.linearRampToValueAtTime(0.45, s + 0.005); g.gain.exponentialRampToValueAtTime(0.001, s + 0.13); o.start(s); o.stop(s + 0.15); }); };
   const chime = (seq) => { const ctx = audio.current.ctx; if (!ctx) return; seq.forEach(([f, t]) => { const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f; const g = ctx.createGain(); g.gain.value = 0; o.connect(g); g.connect(ctx.destination); const s = ctx.currentTime + t; g.gain.linearRampToValueAtTime(0.2, s + 0.02); g.gain.exponentialRampToValueAtTime(0.001, s + 1.1); o.start(s); o.stop(s + 1.2); }); };
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function WindowKnockScene({ onNext, gift }) {
 
   const openWindow = () => { if (opened) return; ensureAudio(); clearInterval(knockTimer.current); setOpened(true); chime([[392, 0], [523, 0.12]]); setTimeout(() => setLetterInHand(true), 1300); };
   const openLetter = (e) => { e?.stopPropagation(); if (!letterInHand) return; ensureAudio(); chime([[660, 0], [880, 0.12]]); setShowInvite(true); setTimeout(() => chime([[523, 0], [659, 0.12], [784, 0.24]]), 200); };
-  const closeLetter = (e) => { e?.stopPropagation(); setShowInvite(false); setLetterInHand(false); setTimeout(() => { setHandReady(true); chime([[440, 0], [660, 0.16]]); }, 450); };
+  const closeLetter = (e) => { e?.stopPropagation(); ensureAudio(); chime([[523, 0], [659, 0.14], [784, 0.28], [1046, 0.42]]); if (navigator.vibrate) navigator.vibrate(30); setShowInvite(false); setTimeout(() => onNext(), 500); };
   const goWithStar = (e) => { e?.stopPropagation(); if (!handReady) return; ensureAudio(); chime([[523, 0], [659, 0.14], [784, 0.28], [1046, 0.42]]); if (navigator.vibrate) navigator.vibrate(30); setTimeout(() => onNext(), 500); };
 
   let banner = '';
@@ -121,7 +121,7 @@ export default function WindowKnockScene({ onNext, gift }) {
           <div className="wk-ic">🎁</div>
           <h1>Hi <span className="nm">{name}</span>, a surprise awaits you!</h1>
           <p>You're invited to visit <b>our world</b>, by <span className="snd">{sender}</span> ✨</p>
-          <button className="wk-close" onClick={closeLetter}>Close the letter</button>
+          <button className="wk-close" onClick={closeLetter}>Let's go ✨</button>
         </div>
       </div>
     </>

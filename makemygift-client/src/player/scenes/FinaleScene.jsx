@@ -14,12 +14,13 @@ const fillUrl = (url) => {
   return url.slice(0, i + m.length) + 'c_fill,g_auto,w_1080,h_1920,q_auto,f_auto/' + url.slice(i + m.length);
 };
 
-export default function FinaleScene({ gift }) {
+export default function FinaleScene({ gift, preview = false }) {
   const NUM = Math.max(1, Math.min(8, gift?.candles || 5));
   const MESSAGE = gift?.finalMessage || 'Happy birthday, my whole world.<br>Thank you for being mine. 💛';
   const FROM = gift?.fromName || null;
-const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 'linear-gradient(135deg,#ff9ec4 0%,#ffd27f 40%,#7fe3d0 75%,#8ac0ff 100%)';
+  const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 'linear-gradient(135deg,#ff9ec4 0%,#ffd27f 40%,#7fe3d0 75%,#8ac0ff 100%)';
   const CREATE_URL = gift?.createUrl || '#';
+  const ACTIVATE_URL = gift?.publicId ? `/studio?activate=${gift.publicId}` : '/studio';
 
   const [out, setOut] = useState(() => Array(NUM).fill(false));
   const [csub, setCsub] = useState('blow to put out the candles');
@@ -40,8 +41,8 @@ const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 
   useEffect(() => () => {
     micOnRef.current = false;
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch {}
-    try { actxRef.current?.close(); } catch {}
+    try { streamRef.current?.getTracks().forEach((t) => t.stop()); } catch { }
+    try { actxRef.current?.close(); } catch { }
   }, []);
 
   const candleLeft = (i) => (NUM <= 1 ? 111 : (115 - 60) + (120 / (NUM - 1)) * i);
@@ -82,7 +83,7 @@ const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 
   const celebrate = () => {
     micOnRef.current = false; setCsub('🎉 yaaay! 🎉');
     confettiBurst(); balloons(); crackers();
-    try { const a = new (window.AudioContext || window.webkitAudioContext)(); [523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(); o.type = 'triangle'; o.frequency.value = f; const g = a.createGain(); g.gain.value = 0; o.connect(g); g.connect(a.destination); const s = a.currentTime + i * 0.12; g.gain.linearRampToValueAtTime(0.18, s + 0.02); g.gain.exponentialRampToValueAtTime(0.001, s + 0.6); o.start(s); o.stop(s + 0.65); }); } catch {}
+    try { const a = new (window.AudioContext || window.webkitAudioContext)();[523, 659, 784, 1046].forEach((f, i) => { const o = a.createOscillator(); o.type = 'triangle'; o.frequency.value = f; const g = a.createGain(); g.gain.value = 0; o.connect(g); g.connect(a.destination); const s = a.currentTime + i * 0.12; g.gain.linearRampToValueAtTime(0.18, s + 0.02); g.gain.exponentialRampToValueAtTime(0.001, s + 0.6); o.start(s); o.stop(s + 0.65); }); } catch { }
     if (navigator.vibrate) navigator.vibrate([30, 50, 30, 50, 60]);
     setTimeout(() => setRevealed(true), 1900);
   };
@@ -98,14 +99,16 @@ const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 
   const crackers = () => {
     const fx = fxRef.current; if (!fx) return;
     for (let burst = 0; burst < 5; burst++) {
-      setTimeout(() => { const cx = 10 + Math.random() * 80, cy = 15 + Math.random() * 45;
-        for (let i = 0; i < 14; i++) { const s = document.createElement('div'); s.className = 'wk6-crack'; s.textContent = ['✨', '🎉', '⭐', '💥', '🎊'][i % 5]; s.style.left = cx + '%'; s.style.top = cy + '%'; const a = Math.random() * 6.28, dd = 50 + Math.random() * 90; s.style.setProperty('--tx', `calc(-50% + ${Math.cos(a) * dd}px)`); s.style.setProperty('--ty', `calc(-50% + ${Math.sin(a) * dd}px)`); fx.appendChild(s); setTimeout(() => s.remove(), 820); } }, burst * 350);
+      setTimeout(() => {
+        const cx = 10 + Math.random() * 80, cy = 15 + Math.random() * 45;
+        for (let i = 0; i < 14; i++) { const s = document.createElement('div'); s.className = 'wk6-crack'; s.textContent = ['✨', '🎉', '⭐', '💥', '🎊'][i % 5]; s.style.left = cx + '%'; s.style.top = cy + '%'; const a = Math.random() * 6.28, dd = 50 + Math.random() * 90; s.style.setProperty('--tx', `calc(-50% + ${Math.cos(a) * dd}px)`); s.style.setProperty('--ty', `calc(-50% + ${Math.sin(a) * dd}px)`); fx.appendChild(s); setTimeout(() => s.remove(), 820); }
+      }, burst * 350);
     }
   };
 
   const share = async () => {
     const data = { title: 'A gift for you 💛', text: 'Look what I received!', url: location.href };
-    if (navigator.share) { try { await navigator.share(data); } catch {} }
+    if (navigator.share) { try { await navigator.share(data); } catch { } }
     else alert('On phones this opens the share sheet (WhatsApp, Instagram, etc.). On desktop, we’d offer a download to post.');
   };
 
@@ -138,17 +141,29 @@ const PHOTO = gift?.revealPhotoUrl ? `url("${fillUrl(gift.revealPhotoUrl)}")` : 
         <div className="wk6-fx" ref={fxRef} />
 
         <div className={`wk6-reveal ${revealed ? 'wk6-on' : ''}`}>
-          {gift?.revealVideoUrl
-            ? <video className="wk6-media wk6-mediavid" src={gift.revealVideoUrl} autoPlay loop playsInline />
-            : <div className="wk6-media" style={{ background: PHOTO, backgroundSize: 'cover', backgroundPosition: 'center' }} />}
+          {preview
+            ? (
+              <>
+                <div className="wk6-media" style={{ background: PHOTO, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(26px) brightness(.5)' }} />
+                <div className="wk6-lock">
+                  <div className="wk6-lockicon">🔒</div>
+                  <div className="wk6-locktitle">Activate to unlock the ending 💛</div>
+                  <div className="wk6-locksub">This is just a preview. Pay ₹159 to reveal the surprise and make the gift live.</div>
+                  <a className="wk6-paybtn" href={ACTIVATE_URL}>Pay ₹159 to activate</a>
+                </div>
+              </>
+            )
+            : (gift?.revealVideoUrl
+              ? <video className="wk6-media wk6-mediavid" src={gift.revealVideoUrl} autoPlay loop playsInline />
+              : <div className="wk6-media" style={{ background: PHOTO, backgroundSize: 'cover', backgroundPosition: 'center' }} />)}
           <div className="wk6-vignette" />
           <div className="wk6-musicnote">♪ music playing</div>
           <div className="wk6-revinner">
-            <div className="wk6-msg" dangerouslySetInnerHTML={{ __html: MESSAGE }} />
+            {!preview && <div className="wk6-msg" dangerouslySetInnerHTML={{ __html: MESSAGE }} />}
             <div className="wk6-from">— with all my love{FROM ? `, ${FROM}` : ''}</div>
             <div className="wk6-revbtns">
-              <button className="wk6-share" onClick={share}>📤 Share this to your story</button>
-              <a className="wk6-createbtn" href={CREATE_URL}>✨ Create your own</a>
+              {!preview && <button className="wk6-share" onClick={share}>📤 Share this to your story</button>}
+              {preview && <a className="wk6-createbtn" href={CREATE_URL}>✨ Create your own</a>}
             </div>
           </div>
         </div>
@@ -196,6 +211,11 @@ const CSS = `
 .wk6-crack{position:absolute;font-size:26px;animation:wk6crk .8s ease-out forwards}
 @keyframes wk6crk{0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(1.2)}}
 .wk6-reveal{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:flex-end;text-align:center;overflow:hidden;background:#120a1e}
+.wk6-lock{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;color:#fff}
+.wk6-lockicon{font-size:54px;margin-bottom:14px}
+.wk6-locktitle{font-family:'Fredoka';font-weight:600;font-size:22px;margin-bottom:8px}
+.wk6-locksub{font-family:'Nunito';font-size:14px;line-height:1.5;color:rgba(255,255,255,.8);max-width:300px}
+.wk6-paybtn{margin-top:18px;display:inline-block;font-family:'Fredoka';font-weight:600;font-size:16px;color:#3a1030;background:linear-gradient(180deg,#ffd27f,#ff9ec4);border-radius:30px;padding:14px 32px;text-decoration:none;box-shadow:0 10px 26px rgba(255,140,180,.45)}
 .wk6-reveal.wk6-on{display:flex;animation:wk6revfade 1.2s ease}
 @keyframes wk6revfade{from{opacity:0}to{opacity:1}}
 .wk6-media{position:absolute;inset:0;animation:wk6kenburns 14s ease-out forwards}

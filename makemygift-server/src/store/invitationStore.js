@@ -1,11 +1,8 @@
 import { customAlphabet } from 'nanoid';
-import { Gift } from '../models/Gift.js';
+import { Invitation } from '../models/Invitation.js';
 import { isConnected } from '../db.js';
 
-// short, URL-safe, unambiguous ids (no look-alike characters)
 const newId = customAlphabet('abcdefghijkmnpqrstuvwxyz23456789', 10);
-
-// in-memory fallback so the API runs without a database
 const memory = new Map();
 
 function sanitize(doc) {
@@ -16,11 +13,11 @@ function sanitize(doc) {
   return o;
 }
 
-export const giftStore = {
+export const invitationStore = {
   async create(data) {
     const publicId = newId();
     if (isConnected()) {
-      const doc = await Gift.create({ ...data, publicId });
+      const doc = await Invitation.create({ ...data, publicId });
       return sanitize(doc);
     }
     const now = new Date();
@@ -29,15 +26,9 @@ export const giftStore = {
       status: 'draft',
       openCount: 0,
       lastOpenedAt: null,
-      revealType: 'photo',
-      theme: 'window-modern',
-      occasion: 'Birthday',
-      title: '',
-      fromName: '',
-      message: '',
-      closingLine: '',
-      mirrorQuestion: '',
-      mediaUrl: '',
+      template: 'royal-wedding',
+      side: 'bride',
+      events: [],
       ...data,
       createdAt: now,
       updatedAt: now,
@@ -48,18 +39,16 @@ export const giftStore = {
 
   async getByPublicId(publicId) {
     if (isConnected()) {
-      const doc = await Gift.findOne({ publicId });
+      const doc = await Invitation.findOne({ publicId });
       return sanitize(doc);
     }
     const rec = memory.get(publicId);
     return rec ? { ...rec } : null;
   },
 
-  // records an open without ever blocking playback (gifts are replayable)
-  // records an open without ever blocking playback (gifts are replayable)
   async recordOpen(publicId) {
     if (isConnected()) {
-      const doc = await Gift.findOneAndUpdate(
+      const doc = await Invitation.findOneAndUpdate(
         { publicId },
         { $inc: { openCount: 1 }, $set: { lastOpenedAt: new Date() } },
         { new: true }
@@ -74,10 +63,9 @@ export const giftStore = {
     return { ...rec };
   },
 
-  // store the Razorpay order id created for this gift
   async setOrder(publicId, orderId) {
     if (isConnected()) {
-      const doc = await Gift.findOneAndUpdate(
+      const doc = await Invitation.findOneAndUpdate(
         { publicId }, { $set: { razorpayOrderId: orderId } }, { new: true }
       );
       return sanitize(doc);
@@ -89,10 +77,9 @@ export const giftStore = {
     return { ...rec };
   },
 
-  // flip the gift to paid (called only after the payment signature is verified)
   async markPaid(publicId, paymentId) {
     if (isConnected()) {
-      const doc = await Gift.findOneAndUpdate(
+      const doc = await Invitation.findOneAndUpdate(
         { publicId }, { $set: { status: 'paid', razorpayPaymentId: paymentId } }, { new: true }
       );
       return sanitize(doc);

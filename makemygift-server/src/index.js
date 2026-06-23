@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { config } from './config.js';
 import { connectDB, isConnected } from './db.js';
 import giftsRouter from './routes/gifts.js';
+import invitationsRouter from './routes/invitations.js';
 
 export const app = express();
 
@@ -15,6 +16,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/gifts', giftsRouter);
+app.use('/api/invitations', invitationsRouter);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 

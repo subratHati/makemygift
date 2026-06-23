@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+.royal-name {
+    font-family: 'Dancing Script', cursive;
+    color: #8b1a1a;
+}
+
+.royal-body {
+    color: #2a1810 !important;
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+.rdp-root {
+    --rdp-accent-color: #e11d48;
+    --rdp-accent-background-color: #ffe4e6;
+}

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import Player from './player/Player.jsx';
 import Studio from './studio/Studio.jsx';
+import HomePage from './HomePage.jsx';
+import InvitationTemplates from './invitation/pages/InvitationTemplates.jsx';
+import InvitationBuilder from './invitation/pages/InvitationBuilder.jsx';
+import InvitationViewer from './invitation/pages/InvitationViewer.jsx';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
@@ -28,10 +32,27 @@ export default function App() {
   const giftId = publicIdFromUrl();
   const isDemo = path === '/demo';
 
-  // The buyer's studio is the default page; the experience lives at /g/:id (or /demo).
-  if (!giftId && !isDemo) return <Studio />;
+  // --- Gift experience (unchanged) ---
   if (isDemo) return <Player gift={DEMO_GIFT} />;
-  return <GiftLoader id={giftId} />;
+  if (giftId) return <GiftLoader id={giftId} />;
+
+  // --- E-invitation module (new) ---
+  // public viewer for a paid invitation link: /invitation/:publicId
+  if (path.startsWith('/invitation/')) {
+    const invId = path.replace('/invitation/', '').replace(/\/+$/, '');
+    if (invId) return <InvitationViewer publicId={invId} />;
+  }
+  if (path === '/invitations') return <InvitationTemplates />;
+  if (path.startsWith('/invitations/template/')) {
+    const templateId = path.replace('/invitations/template/', '').replace(/\/+$/, '');
+    return <InvitationBuilder templateId={templateId} />;
+  }
+
+  // --- Gift creation studio (existing flow; /studio kept for activate links) ---
+  if (path === '/gift' || path === '/studio') return <Studio />;
+
+  // --- Home ---
+  return <HomePage />;
 }
 
 function GiftLoader({ id }) {
@@ -53,7 +74,14 @@ function GiftLoader({ id }) {
 
   if (state.status === 'loading') return <Splash title="opening your gift…" />;
   if (state.status === 'error') return <Splash title="We couldn't find this gift" sub="The link may be incorrect or expired." />;
-  return <Player gift={state.gift} />;
+
+  // a gift only plays once it's been paid for — unless this is the buyer's own preview (?preview=1)
+  const isPreview = new URLSearchParams(window.location.search).get('preview') === '1';
+  if (state.gift.status !== 'paid' && !isPreview) {
+    return <Splash title="This gift isn't active yet 💛" sub="The sender needs to activate it. Please check back soon!" />;
+  }
+
+  return <Player gift={state.gift} preview={isPreview && state.gift.status !== 'paid'} />;
 }
 
 function Splash({ title, sub }) {

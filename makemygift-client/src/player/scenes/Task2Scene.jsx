@@ -18,6 +18,9 @@ const squareUrl = (url) => {
 };
 
 export default function Task2Scene({ onNext, gift }) {
+
+  const memeUrl = gift?.task2MemeUrl || 'https://res.cloudinary.com/dc7zdk6is/image/upload/v1781800855/makemygift/download_5_kyxmje.jpg';
+  const isVid = (u) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u) || /\/video\//.test(u);
   const srcUrl = gift?.puzzlePhotoUrl ? squareUrl(gift.puzzlePhotoUrl) : null;
   const photo = srcUrl ? `url("${srcUrl}")` : PHOTO;
 
@@ -194,6 +197,9 @@ export default function Task2Scene({ onNext, gift }) {
               <div className="wk4-ph">💞</div>
               <h2>You did it!</h2>
               <p>Every piece back where it belongs — just like us.</p>
+              {memeUrl && (isVid(memeUrl)
+                ? <video className="wk4-meme" src={memeUrl} autoPlay loop muted playsInline />
+                : <img className="wk4-meme" src={memeUrl} alt="" />)}
               <button className="wk4-next" onClick={finish}>continue →</button>
             </div>
           </div>
@@ -236,6 +242,7 @@ const CSS = `
 .wk4-shuffle{font-family:'Fredoka';font-weight:600;font-size:13px;color:#3a6ac0;background:none;border:1.5px solid #9fc0f0;border-radius:18px;padding:7px 14px;cursor:pointer}
 .wk4-shakebtn{position:relative;z-index:5;margin-top:12px;font-family:'Fredoka';font-weight:600;font-size:13.5px;color:#3a6ac0;background:rgba(255,255,255,.75);border:1.5px solid #bcd4f5;border-radius:20px;padding:9px 18px;cursor:pointer;animation:wk4up .7s ease .45s both}
 .wk4-done{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:rgba(20,40,80,.55);backdrop-filter:blur(3px);animation:wk4d .5s ease}
+.wk4-meme{width:min(72vw,300px);max-height:38vh;object-fit:contain;border-radius:14px;margin:14px 0;box-shadow:0 10px 26px rgba(0,0,0,.35);background:#fff}
 @keyframes wk4d{from{opacity:0}to{opacity:1}}
 .wk4-card{background:#fff;border-radius:20px;padding:26px 28px;box-shadow:0 24px 60px rgba(20,40,80,.4);max-width:330px}
 .wk4-ph{font-size:46px;animation:wk4beat 1s ease-in-out infinite}

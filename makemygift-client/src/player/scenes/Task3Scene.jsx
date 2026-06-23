@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from 'react';
 // the answer (Web Speech API), matched forgivingly. After two misses the answer
 // is revealed as a hint. Typed fallback for blocked mic / unsupported browsers.
 export default function Task3Scene({ onNext, gift }) {
+  const memeUrl = gift?.task3MemeUrl || 'https://res.cloudinary.com/dc7zdk6is/image/upload/v1781847861/96a153cc1aef6c00adc54a5c56f2f57c_hxn0x3.jpg';
+  const isVid = (u) => /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u) || /\/video\//.test(u);
   const QUESTION = gift?.voiceQuestion || 'How much do you love me?';
   const ANSWER = gift?.voiceAnswer || 'I love you to the moon and back';
   const asker = gift?.fromName || null;
 
-  const [sub, setSub] = useState('tap the mic and say your answer out loud 🎤');
+  const [sub, setSub] = useState('tap the mic and read the line below out loud 🎤');
   const [heard, setHeard] = useState('');
   const [miclbl, setMiclbl] = useState('tap to speak');
   const [listening, setListening] = useState(false);
@@ -23,7 +25,7 @@ export default function Task3Scene({ onNext, gift }) {
   const triesRef = useRef(0);
   const passedRef = useRef(false);
   const listeningRef = useRef(false);
-  const checkRef = useRef(() => {});
+  const checkRef = useRef(() => { });
   const burstRef = useRef(null);
 
   const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
@@ -58,8 +60,7 @@ export default function Task3Scene({ onNext, gift }) {
     setHeard(`you said: “${said}”`);
     if (similar(said, ANSWER) >= 0.7) { pass(); return; }
     triesRef.current += 1;
-    if (triesRef.current >= 2) { setHintOn(true); setSub("read it out loud, just like that 💕"); }
-    else setSub("aww… say it like you mean it 💕 try again");
+    setSub("almost! read the line below out loud 💕");
     setListening(false); listeningRef.current = false;
   };
   checkRef.current = check;
@@ -82,18 +83,18 @@ export default function Task3Scene({ onNext, gift }) {
       else setMiclbl('tap to try again');
     };
     recRef.current = rec;
-    return () => { try { rec.abort(); } catch {} };
+    return () => { try { rec.abort(); } catch { } };
   }, []);
 
   const startListen = () => {
     if (passedRef.current) return;
     if (!supportedRef.current) { setSub("your browser can't hear — type it instead below 💕"); setTypeOn(true); return; }
-    if (listeningRef.current) { try { recRef.current.stop(); } catch {} return; }
+    if (listeningRef.current) { try { recRef.current.stop(); } catch { } return; }
     try { recRef.current.start(); listeningRef.current = true; setListening(true); setMiclbl('listening… speak now'); setHeard(''); }
-    catch {}
+    catch { }
   };
 
-  const submitTyped = () => { if (typeVal.trim()) check(typeVal.trim()); };
+  const submitTyped = () => { if (!typeVal.trim()) return; setTypeOn(false); check(typeVal.trim()); };
   const finish = () => { setLeaving(true); setTimeout(() => onNext(), 650); };
 
   return (
@@ -113,6 +114,7 @@ export default function Task3Scene({ onNext, gift }) {
 
         <div className="wk5-q"><span className="wk5-by">{asker ? `${asker} asks…` : 'They ask…'}</span>{QUESTION}</div>
         <div className="wk5-sub">{sub}</div>
+        <div className="wk5-answer"><span>say this out loud 👇</span>{ANSWER}</div>
         <div className="wk5-heard" dangerouslySetInnerHTML={{ __html: heard ? heard.replace('“', '<b>“').replace('”', '”</b>') : '' }} />
 
         <button className={`wk5-mic ${listening ? 'wk5-live' : ''}`} aria-label="speak" onClick={startListen}>
@@ -120,14 +122,8 @@ export default function Task3Scene({ onNext, gift }) {
         </button>
         <div className="wk5-miclbl">{miclbl}</div>
 
-        {hintOn && (
-          <div className="wk5-hint">
-            <div className="wk5-h">psst… the words they're waiting for are 💕</div>
-            <div className="wk5-a">{ANSWER}</div>
-          </div>
-        )}
-
         <button className="wk5-typelink" onClick={() => setTypeOn((v) => !v)}>can't speak right now? type it instead</button>
+        {typeOn && <div className="wk5-typebackdrop" onClick={() => setTypeOn(false)} />}
         {typeOn && (
           <div className="wk5-typebox">
             <input value={typeVal} onChange={(e) => setTypeVal(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitTyped(); }} placeholder="type your answer…" />
@@ -138,13 +134,16 @@ export default function Task3Scene({ onNext, gift }) {
         {done && (
           <div className="wk5-done">
             <div className="wk5-hh">
-  <svg viewBox="0 0 24 24">
-    <defs><linearGradient id="wk5hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ff7ab0" /><stop offset="1" stopColor="#e23b78" /></linearGradient></defs>
-    <path fill="url(#wk5hg)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-  </svg>
-</div>
+              <svg viewBox="0 0 24 24">
+                <defs><linearGradient id="wk5hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ff7ab0" /><stop offset="1" stopColor="#e23b78" /></linearGradient></defs>
+                <path fill="url(#wk5hg)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </div>
             <h2>That's exactly it.</h2>
             <p>{asker ? `${asker}'s heart just melted a little.` : 'Their heart just melted a little.'}</p>
+            {memeUrl && (isVid(memeUrl)
+              ? <video className="wk5-meme" src={memeUrl} autoPlay loop muted playsInline />
+              : <img className="wk5-meme" src={memeUrl} alt="" />)}
             <button className="wk5-next" onClick={finish}>continue →</button>
           </div>
         )}
@@ -163,16 +162,18 @@ const CSS = `
 .wk5-enterfade{position:fixed;inset:0;z-index:100;background:#fff;pointer-events:none;animation:wk5fade 1s ease forwards}
 @keyframes wk5fade{0%{opacity:1}100%{opacity:0;visibility:hidden}}
 .wk5-label{position:absolute;top:12px;left:0;right:0;text-align:center;font-family:'Fredoka';font-weight:500;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#a85a44;opacity:.6;z-index:60}
-.wk5-star{width:96px;margin:0 auto 6px;display:block;animation:wk5bob 3s ease-in-out infinite}
+.wk5-star{flex-shrink:0;width:96px;margin:0 auto 6px;display:block;animation:wk5bob 3s ease-in-out infinite}
 @keyframes wk5bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 .wk5-star.wk5-listening{animation:wk5lis .8s ease-in-out infinite}
 @keyframes wk5lis{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
 .wk5-q{font-family:'Fredoka';font-weight:600;font-size:25px;line-height:1.3;color:#7a2f1f;max-width:420px;z-index:5}
 .wk5-by{display:block;font-size:13px;font-weight:500;color:#b06a52;letter-spacing:.04em;margin-bottom:4px}
 .wk5-sub{font-size:15.5px;color:#a05a44;margin-top:8px;min-height:22px;z-index:5}
+.wk5-answer{margin-top:12px;max-width:420px;background:rgba(255,255,255,.85);border-radius:16px;padding:12px 18px;z-index:6;font-family:'Fredoka';font-weight:600;font-size:20px;color:#e2452a;line-height:1.3}
+.wk5-answer span{display:block;font-weight:500;font-size:12px;color:#b06a52;letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase}
 .wk5-heard{margin-top:14px;min-height:30px;font-size:17px;color:#7a2f1f;font-style:italic;opacity:.9;z-index:5;max-width:420px}
 .wk5-heard b{font-style:normal}
-.wk5-mic{position:relative;z-index:6;margin-top:18px;width:96px;height:96px;border-radius:50%;border:none;cursor:pointer;background:radial-gradient(circle at 50% 38%,#ff8a6a,#ec4f2e);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px rgba(236,79,46,.4);transition:transform .2s}
+.wk5-mic{flex-shrink:0;position:relative;z-index:6;margin-top:18px;width:96px;height:96px;border-radius:50%;border:none;cursor:pointer;background:radial-gradient(circle at 50% 38%,#ff8a6a,#ec4f2e);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 26px rgba(236,79,46,.4);transition:transform .2s}
 .wk5-mic:active{transform:scale(.95)}
 .wk5-mic svg{width:40px;height:40px}
 .wk5-mic.wk5-live{animation:wk5ring 1.4s ease-in-out infinite}
@@ -183,10 +184,13 @@ const CSS = `
 .wk5-h{font-family:'Fredoka';font-weight:500;font-size:13px;color:#b06a52}
 .wk5-a{font-family:'Fredoka';font-weight:600;font-size:19px;color:#e2452a;margin-top:4px;line-height:1.3}
 .wk5-typelink{margin-top:16px;font-size:14px;color:#c25a3a;text-decoration:underline;cursor:pointer;z-index:6;background:none;border:none;font-family:'Nunito';font-weight:600}
-.wk5-typebox{margin-top:14px;z-index:6;width:min(86vw,380px)}
+.wk5-typebox{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:95;width:min(86vw,380px);background:rgba(255,240,232,.98);padding:22px;border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+.wk5-typebackdrop{position:fixed;inset:0;z-index:94;background:rgba(40,15,10,.45)}
+.wk5-typebox::before{content:"type your answer 💕";display:block;font-family:'Fredoka';font-weight:600;font-size:15px;color:#7a2f1f;margin-bottom:12px}
 .wk5-typebox input{width:100%;font-family:'Nunito';font-size:16px;padding:13px 16px;border-radius:24px;border:2px solid #f0b8a4;outline:none;text-align:center}
 .wk5-typebox button{margin-top:10px;font-family:'Fredoka';font-weight:600;font-size:15px;color:#fff;background:#ec4f2e;border:none;border-radius:24px;padding:11px 26px;cursor:pointer}
 .wk5-done{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;background:radial-gradient(circle at 50% 40%,#fff3ec,#ffd9c9);color:#7a2f1f}
+.wk5-meme{width:min(72vw,300px);max-height:38vh;object-fit:contain;border-radius:14px;margin:14px 0;box-shadow:0 10px 26px rgba(0,0,0,.25);background:#fff}
 .wk5-hh{width:66px;height:66px;animation:wk5beat 1s ease-in-out infinite}
 .wk5-hh svg{width:100%;height:100%;display:block;filter:drop-shadow(0 8px 18px rgba(236,59,126,.35))}
 @keyframes wk5beat{0%,100%{transform:scale(1)}50%{transform:scale(1.16)}}

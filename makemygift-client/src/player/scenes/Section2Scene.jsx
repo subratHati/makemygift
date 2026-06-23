@@ -175,11 +175,6 @@ export default function Section2Scene({ onNext, gift }) {
           </div>
         </div>
 
-        <div className="wk2-crowd">
-          {CHARS.map((html, i) => (
-            <div key={i} className={`wk2-ch ${revealed ? 'wk2-in' : ''}`} style={{ animationDelay: `${i * 0.12}s` }} dangerouslySetInnerHTML={{ __html: html }} />
-          ))}
-        </div>
 
         <div
           className={`wk2-scanner ${scanning ? 'wk2-scanning' : ''}`}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
@@ -52,8 +52,30 @@ export default function Studio() {
   });
   const [status, setStatus] = useState('form'); // form | saving | done | error
   const [link, setLink] = useState('');
+  const [publicId, setPublicId] = useState('');
+  const [paid, setPaid] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
+
+
+  // if opened as /studio?activate=GIFTID, jump straight to that gift's pay screen
+  useEffect(() => {
+    const activateId = new URLSearchParams(window.location.search).get('activate');
+    if (!activateId) return;
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/gifts/${activateId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setPublicId(data.gift.publicId);
+        setLink(`${window.location.origin}/g/${data.gift.publicId}`);
+        setF((prev) => ({ ...prev, recipientName: data.gift.recipientName || '' }));
+        setPaid(data.gift.status === 'paid');
+        setStatus('done');
+      } catch { /* ignore — just show the normal form */ }
+    })();
+  }, []);
 
   const set = (k) => (e) => setF((v) => ({ ...v, [k]: e.target.value }));
   const setVal = (k, val) => setF((v) => ({ ...v, [k]: val }));
@@ -65,24 +87,81 @@ export default function Studio() {
       const res = await fetch(`${API_BASE}/api/gifts`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(f) });
       if (!res.ok) throw new Error('create failed');
       const data = await res.json();
+      setPublicId(data.gift.publicId);
       setLink(`${window.location.origin}/g/${data.gift.publicId}`);
       setStatus('done');
     } catch { setStatus('error'); }
   };
 
-  const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch {} };
+  const copy = async () => { try { await navigator.clipboard.writeText(link); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { } };
   const reset = () => { setStatus('form'); setLink(''); setF({ recipientName: '', fromName: '', occasion: 'Birthday', voiceQuestion: '', voiceAnswer: '', finalMessage: '', puzzlePhotoUrl: '', revealPhotoUrl: '', revealVideoUrl: '', chakraPhotoUrl: '' }); };
+
+  // load Razorpay's checkout script once, on demand
+  const loadRazorpay = () => new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement('script');
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    s.onload = () => resolve(true); s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+
+  const payNow = async () => {
+    setPaying(true);
+    try {
+      // 1) ask our backend to create an order
+      const orderRes = await fetch(`${API_BASE}/api/gifts/${publicId}/order`, { method: 'POST' });
+      if (!orderRes.ok) throw new Error('order failed');
+      const order = await orderRes.json();
+      // 2) open Razorpay checkout
+      const ok = await loadRazorpay();
+      if (!ok) { alert('Could not load payment. Check your connection and try again.'); setPaying(false); return; }
+      const rzp = new window.Razorpay({
+        key: order.keyId, order_id: order.orderId, amount: order.amount, currency: order.currency,
+        name: 'makemygift', description: `Activate gift for ${f.recipientName || 'someone special'}`,
+        theme: { color: '#ec6a1e' },
+        handler: async (resp) => {
+          // 3) verify on our backend, then mark activated
+          const v = await fetch(`${API_BASE}/api/gifts/${publicId}/verify`, {
+            method: 'POST', headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(resp),
+          });
+          if (v.ok) { setPaid(true); } else { alert('Payment could not be verified. If money was deducted, contact support.'); }
+          setPaying(false);
+        },
+        modal: { ondismiss: () => setPaying(false) },
+      });
+      rzp.open();
+    } catch { alert('Something went wrong starting the payment. Please try again.'); setPaying(false); }
+  };
 
   if (status === 'done') {
     return (
       <><style>{CSS}</style>
         <div className="st-page"><div className="st-donewrap">
-          <div className="st-bigemoji">🎉</div>
-          <h1 className="st-h1">Your gift is ready!</h1>
-          <p className="st-p">Share this link with {f.recipientName || 'them'} — opening it plays the whole experience.</p>
-          <div className="st-linkbox"><input readOnly value={link} onFocus={(e) => e.target.select()} /><button onClick={copy}>{copied ? 'Copied ✓' : 'Copy'}</button></div>
-          <div className="st-donebtns"><a className="st-primary" href={link} target="_blank" rel="noreferrer">▶ Preview it</a><button className="st-ghost" onClick={reset}>Create another</button></div>
-          <p className="st-note">This gift is saved as a draft. (Payment comes in a later step.)</p>
+          <div className="st-bigemoji">{paid ? '🎉' : '💝'}</div>
+          <h1 className="st-h1">{paid ? 'Your gift is live!' : 'Almost ready!'}</h1>
+          {paid ? (
+            <>
+              <p className="st-p">Share this link with {f.recipientName || 'them'} — opening it plays the whole experience.</p>
+              <div className="st-linkbox"><input readOnly value={link} onFocus={(e) => e.target.select()} /><button onClick={copy}>{copied ? 'Copied ✓' : 'Copy'}</button></div>
+              <div className="st-donebtns">
+                <a className="st-primary" href={`${link}?preview=1`} target="_blank" rel="noreferrer">▶ Preview it</a>
+                <button className="st-ghost" onClick={reset}>Create another</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="st-p">Pay once to activate {f.recipientName ? `${f.recipientName}'s` : 'this'} gift — then the link goes live and you can share it.</p>
+              <button className="st-primary" style={{ width: '100%', marginTop: 4 }} onClick={payNow} disabled={paying}>
+                {paying ? 'Opening payment…' : 'Pay ₹159 to activate'}
+              </button>
+              <div className="st-donebtns" style={{ marginTop: 14 }}>
+                <a className="st-ghost" href={`${link}?preview=1`} target="_blank" rel="noreferrer">Preview before paying</a>
+                <button className="st-ghost" onClick={reset}>Start over</button>
+              </div>
+              <p className="st-note">Secure payment via Razorpay. The link stays private until you share it.</p>
+            </>
+          )}
         </div></div>
       </>
     );
