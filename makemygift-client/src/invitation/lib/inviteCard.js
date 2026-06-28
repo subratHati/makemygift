@@ -1,6 +1,6 @@
 // Draws a shareable wedding card image on a canvas (no background image needed yet).
 // Returns a Blob (PNG). Swap the drawing in drawBackground() later for a real image.
-const W = 1080, H = 1350;
+const W = 1200, H = 630;
 
 function drawBackground(ctx) {
   // soft cream gradient
@@ -42,18 +42,18 @@ export async function makeInviteCard({ firstName, secondName }) {
   // ensure the script font is ready (falls back to cursive if not)
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch { /* ignore */ }
 
-  centerText(ctx, 'THE WEDDING OF', 360, '600 34px Georgia, serif', '#7a5c1e');
+  centerText(ctx, 'THE WEDDING OF', 130, '600 28px Georgia, serif', '#7a5c1e');
 
   // names
-  centerText(ctx, firstName || 'Bride', 560, "700 110px 'Dancing Script', cursive", '#8b1a1a');
-  centerText(ctx, '&', 660, "700 70px 'Dancing Script', cursive", '#b8860b');
-  centerText(ctx, secondName || 'Groom', 770, "700 110px 'Dancing Script', cursive", '#8b1a1a');
+  centerText(ctx, firstName || 'Bride', 290, "700 90px 'Dancing Script', cursive", '#8b1a1a');
+  centerText(ctx, '&', 360, "700 54px 'Dancing Script', cursive", '#b8860b');
+  centerText(ctx, secondName || 'Groom', 460, "700 90px 'Dancing Script', cursive", '#8b1a1a');
 
   // divider
   ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(W / 2 - 90, 880); ctx.lineTo(W / 2 + 90, 880); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W / 2 - 90, 510); ctx.lineTo(W / 2 + 90, 510); ctx.stroke();
 
-  centerText(ctx, 'With love', 980, "400 46px 'Dancing Script', cursive", '#2a1810');
+  centerText(ctx, 'With love', 565, "400 34px 'Dancing Script', cursive", '#2a1810');
 
   return new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/png', 0.95));
 }

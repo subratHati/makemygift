@@ -12,6 +12,16 @@ export const invitationTemplates = [
     component: 'RoyalWedding',
   },
   {
+    id: 'royal-palace',
+    name: 'Royal Palace',
+    description: 'A luxury palace frame; the story unfolds as you scroll.',
+    accent: 'from-amber-500 to-yellow-600',
+    bg: 'from-[#2a0e2e] to-[#11030f]',
+    emoji: '\u{1F3F0}',
+    hasPhoto: false,
+    component: 'RoyalPalace',
+  },
+  {
     id: 'floral-wedding',
     name: 'Floral Wedding Invitation',
     description: 'Soft pastels and delicate watercolor florals with elegant script.',

@@ -4,8 +4,9 @@
 import RoyalWedding from '../templates/RoyalWedding.jsx';
 import FloralWedding from '../templates/FloralWedding.jsx';
 import TempleWedding from '../templates/TempleWedding.jsx';
+import RoyalPalaceInvitation from '../templates/RoyalPalaceInvitation.jsx';
 
-const REGISTRY = { RoyalWedding, FloralWedding, TempleWedding };
+const REGISTRY = { RoyalWedding, FloralWedding, TempleWedding, RoyalPalace: RoyalPalaceInvitation };
 
 export default function InvitationPreview({ template, data }) {
   const Comp = REGISTRY[template?.component] || RoyalWedding;

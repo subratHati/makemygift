@@ -37,8 +37,10 @@ router.get('/:publicId', async (req, res) => {
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(desc)}" />
 <meta property="og:image" content="${esc(image)}" />
-<meta property="og:image:width" content="1080" />
-<meta property="og:image:height" content="1350" />
+<meta property="og:image:secure_url" content="${esc(image)}" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
 <meta property="og:url" content="${esc(appUrl)}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(title)}" />

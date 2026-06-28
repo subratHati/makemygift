@@ -14,3 +14,48 @@
     --rdp-accent-color: #e11d48;
     --rdp-accent-background-color: #ffe4e6;
 }
+
+/* Royal Palace — Section 1 */
+.rp-devanagari {
+    font-family: 'Kalam', cursive;
+    color: #8b1a1a;
+}
+
+.rp-mandala-spin {
+    animation: rp-spin 32s linear infinite;
+}
+
+@keyframes rp-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.rp-scene3,
+.rp-scene3 * {
+    color: #922724 !important;
+}
+
+/* Royal Palace — events scene */
+.rp-events,
+.rp-events * {
+    color: #922724 !important;
+}
+
+.rp-serif {
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+.rp-wedding,
+.rp-wedding * {
+    color: #922724 !important;
+}
+
+.rp-thanks,
+.rp-thanks * {
+    color: #922724 !important;
+}

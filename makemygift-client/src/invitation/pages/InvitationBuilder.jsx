@@ -125,6 +125,14 @@ export default function InvitationBuilder({ templateId }) {
             className="mt-3 inline-block text-rose-600 underline text-sm">
             Open invitation
           </a>
+
+          <div className="mt-6 rounded-xl bg-amber-50 border border-amber-200 p-3 text-left">
+            <p className="text-xs text-amber-800 leading-relaxed">
+              <strong>Please save this link now.</strong> If you lose it (network issue, closed tab),
+              send your payment screenshot to our Instagram <strong>@makemygift</strong> with your
+              email or WhatsApp number — we&apos;ll send your link within 24 hours.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -177,6 +185,7 @@ export default function InvitationBuilder({ templateId }) {
             <Field label="Bride's Father" value={data.brideFather} onChange={set('brideFather')} placeholder="e.g. Rajesh Sharma" />
             <Field label="Bride's Mother" value={data.brideMother} onChange={set('brideMother')} placeholder="e.g. Meena Sharma" />
           </div>
+          <p className="text-xs text-stone-400 -mt-2">Just type the names — no need to add &ldquo;Mr.&rdquo; or &ldquo;Mrs.&rdquo;, we add those for you.</p>
 
           <DateField label="Main Wedding Date" value={data.weddingDate} onChange={(v) => setData((d) => ({ ...d, weddingDate: v }))} placeholder="Pick the wedding date" />
           <Field label="Main Venue" value={data.venue} onChange={set('venue')} placeholder="e.g. Royal Palace" />

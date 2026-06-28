@@ -127,9 +127,9 @@ export default function RoyalWedding({ data = {} }) {
 function ScrollHint({ progress }) {
   const opacity = useTransform(progress, [0, 0.04], [1, 0]);
   return (
-    <motion.div style={{ opacity }} className="absolute bottom-6 inset-x-0 z-40 flex flex-col items-center text-amber-100/70 text-xs tracking-widest pointer-events-none">
-      <span>scroll</span>
-      <span className="mt-1 animate-bounce">&#8595;</span>
+    <motion.div style={{ opacity }} className="absolute bottom-6 inset-x-0 z-40 flex flex-col items-center royal-body text-xs tracking-[0.3em] uppercase pointer-events-none">
+      <span>Scroll</span>
+      <span className="mt-1 text-lg animate-bounce">&#8595;</span>
     </motion.div>
   );
 }

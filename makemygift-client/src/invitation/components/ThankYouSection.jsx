@@ -7,7 +7,7 @@ export default function ThankYouSection({ progress, data }) {
   const opacity = useTransform(progress, [s, s + 0.06, 1], [0, 1, 1]);
   const scale = useTransform(progress, [s, e], [0.92, 1]);
   return (
-    <motion.div style={{ opacity, scale }} className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-10 pointer-events-none">
+    <motion.div style={{ opacity, scale }} className="rp-thanks absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-10 pointer-events-none">
       <h2 className="font-serif text-4xl sm:text-5xl font-semibold royal-name">Thank You</h2>
       <p className="mt-4 royal-body text-base max-w-xs">We look forward to celebrating with you.</p>
       <p className="mt-6 font-serif royal-name text-lg">{data.groomName} &amp; {data.brideName}</p>
